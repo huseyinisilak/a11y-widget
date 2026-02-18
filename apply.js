@@ -150,6 +150,14 @@
     speak(txt, prefs.ttsRate || 1);
   }
 
+function firstTextNode(el) {
+  if (!el) return null;
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => (n.nodeValue && n.nodeValue.trim().length ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP)
+  });
+  return walker.nextNode();
+}
+
   function selectWordAtPoint(x, y) {
     let range = null;
 
@@ -166,8 +174,20 @@
     if (!range) return false;
     if (isEditableNode(range.startContainer)) return false;
 
-    const node = range.startContainer;
-    if (!node || node.nodeType !== Node.TEXT_NODE) return false;
+    let node = range.startContainer;
+if (!node) return false;
+
+// Eğer text node değilse, tıklanan element içinden ilk text node’u bul
+if (node.nodeType !== Node.TEXT_NODE) {
+  const el = document.elementFromPoint(x, y);
+  node = firstTextNode(el) || firstTextNode(el?.closest("*"));
+  if (!node) return false;
+
+  // range'i bu text node’un ortasına kur
+  range = document.createRange();
+  range.setStart(node, Math.min(1, (node.nodeValue || "").length));
+  range.collapse(true);
+}
 
     const text = node.nodeValue || "";
     let i = Math.max(0, Math.min(range.startOffset, text.length));
@@ -198,25 +218,32 @@
 
   // 1) Tek tıkla kelime seç + oku (Auto mode açıkken)
   document.addEventListener("pointerup", (e) => {
-    if (!prefs.ttsAutoRead) return;
-    if (e.button !== 0) return;
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
+  if (!prefs.ttsAutoRead) return;
 
-    const t = e.target;
-    if (t && (t.closest(".a11y-w-btn") || t.closest(".a11y-w-frame"))) return;
+  const isTouch = e.pointerType === "touch" || e.pointerType === "pen";
+  if (!isTouch && e.button !== 0) return;
 
-    const existing = getSelectionText();
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
 
-    if (!existing) {
-      const ok = selectWordAtPoint(e.clientX, e.clientY);
-      if (ok) {
-        // Selection bazen aynı tick içinde boş dönebiliyor -> bir sonraki tick'te oku
+  const t = e.target;
+  if (t && (t.closest(".a11y-w-btn") || t.closest(".a11y-w-frame"))) return;
+
+  const existing = getSelectionText();
+
+  if (!existing) {
+    const ok = selectWordAtPoint(e.clientX, e.clientY);
+    if (ok) {
+      if (isTouch) {
+        // iOS/Android gesture bozulmasın
+        speakCurrentSelectionAuto();
+      } else {
         setTimeout(() => speakCurrentSelectionAuto(), 0);
       }
-    } else {
-      speak(existing, prefs.ttsRate || 1);
     }
-  }, true);
+  } else {
+    speak(existing, prefs.ttsRate || 1);
+  }
+}, true);
 
   // 2) Kullanıcı drag / shift / double click ile seçim yaparsa: yeni seçimi baştan oku
   document.addEventListener("selectionchange", () => {
