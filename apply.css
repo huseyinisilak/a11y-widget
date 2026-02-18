@@ -1,0 +1,74 @@
+/* ====== GENEL AYARLAR (class tabanlı) ====== */
+
+html.a11y-text-1 { font-size: 110%; }
+html.a11y-text-2 { font-size: 120%; }
+
+html.a11y-lh-1 { line-height: 1.6; }
+html.a11y-lh-2 { line-height: 1.85; }
+
+html.a11y-ls-1 { letter-spacing: 0.04em; }
+html.a11y-ls-2 { letter-spacing: 0.08em; }
+
+html.a11y-contrast {
+  filter: contrast(1.25) saturate(1.1);
+}
+
+html.a11y-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.a11y-grayscale {
+  filter: grayscale(1);
+}
+
+/* Birden fazla filter birikmesin diye apply.js tarafında "stack" yönetimi yapacağız.
+   Bu CSS sadece class’ların niyetini gösteriyor; gerçek uygulama apply.js’de. */
+
+/* Animasyon azalt */
+html.a11y-reduce-motion *, html.a11y-reduce-motion *::before, html.a11y-reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Link vurgulama */
+html.a11y-highlight-links a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 2px !important;
+}
+
+/* Focus görünürlüğünü artır */
+html.a11y-strong-focus :focus-visible {
+  outline: 3px solid #ffbf47 !important;
+  outline-offset: 3px !important;
+}
+
+/* ====== Overlay bileşenleri (apply.js ekler) ====== */
+#a11y-cursor {
+  position: fixed;
+  left: 0; top: 0;
+  width: 24px; height: 24px;
+  border-radius: 999px;
+  border: 3px solid rgba(0,0,0,.65);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  pointer-events: none;
+  z-index: 2147483647;
+  transform: translate(-50%, -50%);
+  display: none;
+  background: rgba(255,255,255,.35);
+  backdrop-filter: blur(2px);
+}
+
+#a11y-ruler {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  height: 52px;
+  background: rgba(0,0,0,.10);
+  border-top: 1px solid rgba(0,0,0,.18);
+  border-bottom: 1px solid rgba(0,0,0,.18);
+  pointer-events: none;
+  z-index: 2147483646;
+  display: none;
+}
