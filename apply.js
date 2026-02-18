@@ -157,37 +157,39 @@ function firstTextNode(el) {
   });
   return walker.nextNode();
 }
-function findParagraphContainer(el) {
+function findReadableContainer(el) {
   if (!el) return null;
 
-  // Öncelikli: klasik metin blokları
+  // 1) Öncelik: tablo hücresi
+  const cell = el.closest("td, th");
+  if (cell) return cell;
+
+  // 2) Başlıklar
+  const heading = el.closest("h1, h2, h3, h4, h5, h6");
+  if (heading) return heading;
+
+  // 3) Klasik metin blokları
   const block = el.closest("p, li, blockquote, dd, dt, figcaption");
   if (block) return block;
 
-  // Alternatif: role veya genel bloklar (çok agresif olmasın)
-  const alt = el.closest('[role="article"], [role="main"], article, section, main');
+  // 4) Son çare: çok geniş konteynerlara kaçmasın diye sınırlı seç
+  const alt = el.closest("article, section, main, [role='article'], [role='main']");
   return alt || null;
 }
 
-function selectParagraphAtPoint(x, y) {
+
+function selectReadableAtPoint(x, y) {
   const el = document.elementFromPoint(x, y);
   if (!el) return false;
 
   if (isEditableNode(el)) return false;
 
-  const container = findParagraphContainer(el);
+  const container = findReadableContainer(el);
   if (!container) return false;
 
-  // Metin yoksa seçme
+  // Hücrelerde bazen metin az olur; yine de okuyalım
   const txt = normalizeText(container.innerText || "");
-  const maxChars = 1500;
-if (txt.length > maxChars) {
-  // container içinden ilk 1500 karakteri seçmek zor (range ile kırpmak gerekir)
-  // MVP’de en iyisi: selection yerine direkt speak yapmak:
-  speak(txt.slice(0, maxChars) + "…", prefs.ttsRate || 1);
-  return true;
-}
-  if (!txt || txt.length < 2) return false;
+  if (!txt || txt.length < 1) return false;
 
   const range = document.createRange();
   range.selectNodeContents(container);
@@ -272,7 +274,7 @@ if (node.nodeType !== Node.TEXT_NODE) {
   const existing = getSelectionText();
 
   if (!existing) {
-   const ok = selectParagraphAtPoint(e.clientX, e.clientY);
+   const ok = selectReadableAtPoint(e.clientX, e.clientY);
     if (ok) {
       if (isTouch) {
         // iOS/Android gesture bozulmasın
