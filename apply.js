@@ -189,6 +189,129 @@ function ttsResume() {
 function ttsStop() {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 }
+// ===== AUTO READ (ttsAutoRead) + tek tık kelime seç =====
+let lastSpoken = "";
+let selectionDebounce = null;
+
+function normalizeText(s) {
+  return (s || "").replace(/\s+/g, " ").trim();
+}
+
+function isEditableNode(node) {
+  if (!node) return false;
+  const el = node.nodeType === 1 ? node : node.parentElement;
+  if (!el) return false;
+  return !!el.closest('input, textarea, [contenteditable="true"], [contenteditable=""], [role="textbox"]');
+}
+
+function speakTextAuto(text) {
+  text = normalizeText(text);
+  if (!text) return;
+
+  // Aynı seçimi tekrar tekrar okutmayı azalt
+  if (text === lastSpoken) return;
+  lastSpoken = text;
+
+  const rate = Number(prefs.ttsRate || 1);
+
+  // Baştan okut
+  window.speechSynthesis.cancel();
+
+  const ut = new SpeechSynthesisUtterance(text);
+  ut.rate = Math.max(0.7, Math.min(1.3, rate));
+  ut.lang = document.documentElement.lang || "tr-TR";
+  window.speechSynthesis.speak(ut);
+}
+
+function speakCurrentSelectionAuto() {
+  if (!prefs.ttsAutoRead) return;
+
+  const sel = window.getSelection?.();
+  if (!sel || sel.rangeCount === 0) return;
+  if (isEditableNode(sel.anchorNode)) return;
+
+  const txt = normalizeText(sel.toString());
+  if (!txt) return;
+
+  speakTextAuto(txt);
+}
+
+function selectWordAtPoint(x, y) {
+  let range = null;
+
+  if (document.caretRangeFromPoint) {
+    range = document.caretRangeFromPoint(x, y);
+  } else if (document.caretPositionFromPoint) {
+    const pos = document.caretPositionFromPoint(x, y);
+    if (pos) {
+      range = document.createRange();
+      range.setStart(pos.offsetNode, pos.offset);
+      range.collapse(true);
+    }
+  }
+  if (!range) return false;
+  if (isEditableNode(range.startContainer)) return false;
+
+  const node = range.startContainer;
+  if (!node || node.nodeType !== Node.TEXT_NODE) return false;
+
+  const text = node.nodeValue || "";
+  let i = Math.max(0, Math.min(range.startOffset, text.length));
+
+  const isWordChar = (ch) => /[0-9A-Za-z_ÇĞİÖŞÜçğıöşü]/.test(ch || "");
+
+  // boşluğa denk geldiyse yakındaki karaktere kay
+  if (text && !isWordChar(text[i]) && i > 0 && isWordChar(text[i - 1])) i = i - 1;
+  else if (text && !isWordChar(text[i]) && i < text.length - 1 && isWordChar(text[i + 1])) i = i + 1;
+
+  let left = i, right = i;
+
+  while (left > 0 && isWordChar(text[left - 1])) left--;
+  while (right < text.length && isWordChar(text[right])) right++;
+
+  if (right <= left) return false;
+
+  const wordRange = document.createRange();
+  wordRange.setStart(node, left);
+  wordRange.setEnd(node, right);
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(wordRange);
+
+  return true;
+}
+
+// 1) Tek tıkla kelime seç + oku
+document.addEventListener("pointerup", (e) => {
+  if (!prefs.ttsAutoRead) return;
+  if (e.button !== 0) return; // sol tık
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+  const t = e.target;
+  if (t && (t.closest(".a11y-w-btn") || t.closest(".a11y-w-frame"))) return;
+
+  // Kullanıcı drag ile seçim yaptıysa browser selection zaten var: onu okuruz
+  const sel = window.getSelection?.();
+  const existing = sel ? normalizeText(sel.toString()) : "";
+
+  if (!existing) {
+    const ok = selectWordAtPoint(e.clientX, e.clientY);
+    if (ok) speakCurrentSelectionAuto();
+  } else {
+    speakTextAuto(existing);
+  }
+}, true);
+
+// 2) Seçim değişince (drag/shift/double click vs.) baştan oku
+document.addEventListener("selectionchange", () => {
+  if (!prefs.ttsAutoRead) return;
+
+  clearTimeout(selectionDebounce);
+  selectionDebounce = setTimeout(() => {
+    speakCurrentSelectionAuto();
+  }, 120);
+});
 
 
   // İlk uygulama
