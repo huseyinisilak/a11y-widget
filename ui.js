@@ -230,6 +230,7 @@
 
   // Prefleri parent'tan iste
   let prefs = {};
+  let initConfig = { readContainer: "main" };
   send("A11Y_GET_PREFS", {});
 
   window.addEventListener("message", (event) => {
@@ -239,6 +240,14 @@
     if (msg.type === "A11Y_INIT" && msg.payload?.color) {
       document.documentElement.style.setProperty("--accent", msg.payload.color);
     }
+    if (msg.type === "A11Y_INIT") {
+    initConfig = msg.payload || initConfig;
+
+    const hint = document.getElementById("ttsContainerHint");
+    if (hint && initConfig.readContainer) {
+      hint.textContent = `Sayfayı oku: ${initConfig.readContainer} içeriği okunur.`;
+    }
+  }
 
     if (msg.type === "A11Y_PREFS") {
       prefs = msg.payload || {};
@@ -304,29 +313,17 @@ function tts(type, payload) {
 
 const rateEl = document.getElementById("ttsRate");
 
-document.getElementById("ttsSelection")?.addEventListener("click", () => {
-  tts("A11Y_TTS_SPEAK_SELECTION", { rate: Number(rateEl?.value || 1) });
-});
-
 document.getElementById("ttsPage")?.addEventListener("click", () => {
   tts("A11Y_TTS_SPEAK_PAGE", { rate: Number(rateEl?.value || 1) });
 });
 
-document.getElementById("ttsPause")?.addEventListener("click", () => {
-  tts("A11Y_TTS_PAUSE", {});
-});
+document.getElementById("ttsPause")?.addEventListener("click", () => tts("A11Y_TTS_PAUSE", {}));
+document.getElementById("ttsResume")?.addEventListener("click", () => tts("A11Y_TTS_RESUME", {}));
+document.getElementById("ttsStop")?.addEventListener("click", () => tts("A11Y_TTS_STOP", {}));
 
-document.getElementById("ttsResume")?.addEventListener("click", () => {
-  tts("A11Y_TTS_RESUME", {});
-});
-
-document.getElementById("ttsStop")?.addEventListener("click", () => {
-  tts("A11Y_TTS_STOP", {});
-});
-
-document.getElementById("ttsRate")?.addEventListener("input", () => {
-  const rate = Number(rateEl?.value || 1);
-  tts("A11Y_TTS_SET_RATE", { rate });
+// Hız değişince apply tarafında da hatırlayalım (prefs.ttsRate)
+rateEl?.addEventListener("input", () => {
+  tts("A11Y_SET_PREF", { key: "ttsRate", value: Number(rateEl.value) });
 });
 
 })();

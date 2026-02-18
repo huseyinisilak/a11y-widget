@@ -149,3 +149,9 @@ html.a11y-strong-focus :focus-visible {
   display: none;
 }
 
+/* Metni oku modu açıkken seçim arka planı */
+html.a11y-tts-on ::selection {
+  background: #ffeb3b;
+  color: #000;
+}
+
