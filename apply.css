@@ -7,6 +7,36 @@ html.a11y-text-2 { font-size: 120%; }
 html.a11y-lh-1 { line-height: 1.6; }
 html.a11y-lh-2 { line-height: 1.85; }
 
+/* Satır aralığı - çoğu sitede metin elemanları kendi line-height'ını set eder.
+   Bu yüzden body + metin elemanlarına da uygularız. */
+
+html.a11y-lh-1,
+html.a11y-lh-1 body,
+html.a11y-lh-1 p,
+html.a11y-lh-1 li,
+html.a11y-lh-1 div,
+html.a11y-lh-1 span,
+html.a11y-lh-1 a,
+html.a11y-lh-1 td,
+html.a11y-lh-1 th,
+html.a11y-lh-1 blockquote {
+  line-height: 1.6 !important;
+}
+
+html.a11y-lh-2,
+html.a11y-lh-2 body,
+html.a11y-lh-2 p,
+html.a11y-lh-2 li,
+html.a11y-lh-2 div,
+html.a11y-lh-2 span,
+html.a11y-lh-2 a,
+html.a11y-lh-2 td,
+html.a11y-lh-2 th,
+html.a11y-lh-2 blockquote {
+  line-height: 1.85 !important;
+}
+
+
 html.a11y-ls-1 { letter-spacing: 0.04em; }
 html.a11y-ls-2 { letter-spacing: 0.08em; }
 
