@@ -56,7 +56,39 @@
     btn.setAttribute("aria-label", label);
     btn.setAttribute("aria-haspopup", "dialog");
     btn.setAttribute("aria-expanded", "false");
-    btn.innerHTML = `A<span aria-hidden="true">11Y</span>`;
+    btn.innerHTML = `
+  <span class="a11y-icon" aria-hidden="true">
+    <svg viewBox="0 0 64 64" width="30" height="30" focusable="false" aria-hidden="true">
+      <!-- dış halka -->
+      <circle cx="32" cy="32" r="26" fill="none" stroke="white" stroke-width="4"></circle>
+      <!-- baş -->
+      <circle cx="32" cy="21" r="4.5" fill="white"></circle>
+      <!-- kollar + gövde + bacaklar (stilize) -->
+      <path d="M20 28
+               Q32 22 44 28
+               L44 33
+               Q32 27 20 33 Z"
+            fill="white"></path>
+
+      <path d="M30 27
+               L34 27
+               L34 45
+               Q34 49 32 49
+               Q30 49 30 45 Z"
+            fill="white"></path>
+
+      <path d="M30 45
+               L24 56
+               L28 56
+               L32 48
+               L36 56
+               L40 56
+               L34 45 Z"
+            fill="white"></path>
+    </svg>
+  </span>
+`;
+
     return btn;
   }
 
@@ -85,6 +117,9 @@
         box-shadow: 0 10px 28px rgba(0,0,0,.22);
         background: var(--a11y-accent, #0ea5e9);
         color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font: 800 14px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial;
         letter-spacing: .3px;
       }
