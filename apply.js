@@ -46,6 +46,10 @@
     root.classList.toggle("a11y-reduce-motion", !!prefs.reduceMotion);
     root.classList.toggle("a11y-highlight-links", !!prefs.highlightLinks);
     root.classList.toggle("a11y-strong-focus", !!prefs.strongFocus);
+    root.classList.toggle("a11y-hide-cursor", !!prefs.bigCursor);
+    root.classList.toggle("a11y-dyslexia", !!prefs.dyslexiaMode);
+
+
 
     // Metni oku modu
     root.classList.toggle("a11y-tts-on", !!prefs.ttsAutoRead);
